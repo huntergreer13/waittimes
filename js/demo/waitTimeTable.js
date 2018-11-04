@@ -1,48 +1,92 @@
-// Call the dataTables jQuery plugin
+var startDate;
+var endDate;
+
 $(document).ready(function() {
-  refreshTable($('#tableDropdown').find('option:selected').attr('park'), $('#tableFilterDate').val());
-  //tableFilterSubmitted();
+  var start = moment();
+  var end = moment();
+  var max = moment();
+  function cb(start, end) {
+    $('#reportrange span').html(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+    startDate = start.format('YYYY-MM-DD');
+    endDate = end.format('YYYY-MM-DD');
+  }
+  $('#reportrange').daterangepicker({
+    startDate: start,
+    endDate: end,
+    maxDate: max,
+    dateLimit: {
+      years:1
+    },
+    ranges: {
+      'Today': [moment(), moment()],
+      'Yesterday': [moment().subtract(1,'days'), moment().subtract(1,'days')],
+      'This Week': [moment().startOf('week'), moment()],
+      'Last Week': [moment().weekday(-7), moment().weekday(-1)],
+      'This Month': [moment().startOf('month'), moment().endOf('month')],
+      'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')]
+    }
+  }, cb);
+
+  $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
+    startDate = picker.startDate.format('YYYY-MM-DD');
+    endDate = picker.endDate.format('YYYY-MM-DD');
+    tableFilterSubmitted();
+  });
+
+  //set start and end date
+  startDate = moment().format('YYYY-MM-DD');
+  endDate = startDate;
+  $('#reportrange').data('daterangepicker').setStartDate(moment(startDate));
+  $('#reportrange').data('daterangepicker').setEndDate(moment(endDate));
+  $('#reportrange span').html(moment(startDate).format('MMM D, YYYY') + ' - ' + moment(endDate).format('MMM D, YYYY'));
+
+  tableFilterSubmitted();
 
 });
 
 
-
 function tableFilterSubmitted() {
-  /*('#dataTable').empty();
-  $('#dataTable').append("<thead><tr></tr></thead><tbody></tbody>");*/
   var parkInput = $('#tableDropdown').find('option:selected').attr('park');
-  var filterDate = $('#tableFilterDate').val();
-  refreshTable(parkInput, filterDate);
+  refreshTable(parkInput, startDate, endDate);
 }
 
-function refreshTable(park, dateStartsWith) {
+$('#tableDropdown').change(function() {
+  tableFilterSubmitted();
+});
+
+function refreshTable(park, startDate, endDate) {
   $("#tableLabel p").empty();
   $("#tableLabel p").append("Historical Wait Times: " + $('#tableDropdown').find('option:selected').attr('name'));
 
-  callWaitTimesAPI(dateStartsWith, park).then(function (data) {
+  callWaitTimesAPI(park, startDate, endDate).then(function (data) {
     if (data["Body"] == "") {
       console.log("Error getting wait time data.");
       alert("Error getting wait time data.");
     }
-    var data = data["Body"];
-    //console.log("API returned: " + JSON.stringify(data));
-    data.sort(GetSortOrder("Hour"));
-    var tableData = generateTableData(data);
+    else {
+      data = data["Body"];
+      //console.log("API returned: " + JSON.stringify(data));
+      data.sort(GetSortOrder("Hour"));
+      var tableData = generateTableData(data);
 
-    var colList = [];
-    for(var hr in data) {
-      colList.push(data[hr]["Hour"]);
+      var colList = [];
+      for(var hr in data) {
+        colList.push(data[hr]["Hour"]);
+      }
+      populatedataTable(tableData, colList);
     }
-    populatedataTable(tableData, colList);
+
   });
 }
 
 
-function callWaitTimesAPI(dateStartsWith, park) {
+function callWaitTimesAPI(park, startDate, endDate) {
+  var start = startDate + "/00";
+  var end = endDate + "/23";
   return $.ajax({
-   url: 'https://oktnhdxq8f.execute-api.us-east-2.amazonaws.com/dev/wait-times?dateStartsWith=\"' + dateStartsWith + '\"' + '&park=\"' + park + '\"',
-       dataType: 'json',
-       async: true
+    url: 'https://oktnhdxq8f.execute-api.us-east-2.amazonaws.com/dev/wait-times?park=' + park + '&startDate=' + start + '&endDate=' + end,
+    dataType: 'json',
+    async: true
    });
 }
 
