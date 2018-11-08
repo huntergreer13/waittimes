@@ -1,4 +1,4 @@
-// Set new default font family and font color to mimic Bootstrap's default styling
+getHistoricalWaitTimes// Set new default font family and font color to mimic Bootstrap's default styling
 Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 Chart.defaults.global.defaultFontColor = '#292b2c';
 
@@ -61,9 +61,9 @@ function refreshChart(park, startDate, endDate) {
   $("#chartLabel p").append($('#chartDropdown').find('option:selected').attr('name'));
 
   var ctx = document.getElementById("myAreaChart").getContext('2d');
-  callWaitTimesAPI(park, startDate, endDate).then(function (data) {
+  getHistoricalWaitTimes(park, startDate, endDate).then(function (data) {
       if (data["Body"] == "") {
-        console.log("Error getting wait time data.");
+        alert("Error getting wait time data or no data available for selected timeframe.");
       }
       else {
         var data = data["Body"];
@@ -80,15 +80,6 @@ function refreshChart(park, startDate, endDate) {
 
   });
 }
-
-
-/*function callWaitTimesAPI(dateStartsWith, park) { //took this out because it's in waitTimeTable.js
-  return $.ajax({
-    url: 'https://oktnhdxq8f.execute-api.us-east-2.amazonaws.com/dev/wait-times?dateStartsWith=' + dateStartsWith + '&park=' + park,
-    dataType: 'json',
-    async: true
-   });
-}*/
 
 
 function generateGraphData(obj) {

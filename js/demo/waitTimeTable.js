@@ -30,7 +30,8 @@ $(document).ready(function() {
   $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
     startDate = picker.startDate.format('YYYY-MM-DD');
     endDate = picker.endDate.format('YYYY-MM-DD');
-    tableFilterSubmitted();
+    var parkInput = $('#tableDropdown').find('option:selected').attr('park');
+    refreshHistoricalWaitTimeTable(parkInput, startDate, endDate);
   });
 
   //set start and end date
@@ -40,47 +41,43 @@ $(document).ready(function() {
   $('#reportrange').data('daterangepicker').setEndDate(moment(endDate));
   $('#reportrange span').html(moment(startDate).format('MMM D, YYYY') + ' - ' + moment(endDate).format('MMM D, YYYY'));
 
-  tableFilterSubmitted();
+  var parkInput = $('#tableDropdown').find('option:selected').attr('park');
+  refreshHistoricalWaitTimeTable(parkInput, startDate, endDate);
 
 });
 
-
-function tableFilterSubmitted() {
-  var parkInput = $('#tableDropdown').find('option:selected').attr('park');
-  refreshTable(parkInput, startDate, endDate);
-}
 
 $('#tableDropdown').change(function() {
-  tableFilterSubmitted();
+  var parkInput = $('#tableDropdown').find('option:selected').attr('park');
+  refreshHistoricalWaitTimeTable(parkInput, startDate, endDate);
 });
 
-function refreshTable(park, startDate, endDate) {
+function refreshHistoricalWaitTimeTable(park, startDate, endDate) {
   $("#tableLabel p").empty();
   $("#tableLabel p").append("Historical Wait Times: " + $('#tableDropdown').find('option:selected').attr('name'));
 
-  callWaitTimesAPI(park, startDate, endDate).then(function (data) {
+  getHistoricalWaitTimes(park, startDate, endDate).then(function (data) {
     if (data["Body"] == "") {
-      console.log("Error getting wait time data.");
-      alert("Error getting wait time data.");
+      alert("Error getting wait time data or no data available for selected timeframe.");
     }
     else {
       data = data["Body"];
       //console.log("API returned: " + JSON.stringify(data));
       data.sort(GetSortOrder("Hour"));
-      var tableData = generateTableData(data);
+      var tableData = generateHistoricalTableData(data);
 
       var colList = [];
       for(var hr in data) {
         colList.push(data[hr]["Hour"]);
       }
-      populatedataTable(tableData, colList);
+      populateHistoricalDataTable(tableData, colList);
     }
 
   });
 }
 
 
-function callWaitTimesAPI(park, startDate, endDate) {
+function getHistoricalWaitTimes(park, startDate, endDate) {
   var start = startDate + "/00";
   var end = endDate + "/23";
   return $.ajax({
@@ -90,7 +87,7 @@ function callWaitTimesAPI(park, startDate, endDate) {
    });
 }
 
-function generateTableData(data) {
+function generateHistoricalTableData(data) {
   //create object with hours as main key, and create list of hours and list of rides
   var hourObj = {};
   var hourList = [];
@@ -142,11 +139,11 @@ function GetSortOrder(arr) { //sorts by objects in a list
 }
 
 
-function populatedataTable(data, colList) {
+function populateHistoricalDataTable(data, colList) {
   $('#dataTable').empty();
   $('#dataTable').append("<thead><tr></tr></thead><tbody></tbody>");
 
-  //populate columns
+  //populate column titles
   $("#dataTable tr").append("<td>Ride</td>");
   for(var x in colList) {
     var date = colList[x].split("/")[0].split("-")[1] + "/" + colList[x].split("/")[0].split("-")[2];
@@ -172,43 +169,8 @@ function populatedataTable(data, colList) {
 
   //populate rows -- pirate's should be at 2, 3, 4, 5, 6pm
   var numOfColumns = colList.length + 1;
-  var c = 0;
-  var countOfColsAdded = 0;
-  //console.log(JSON.stringify(data));
-  /*for(var row in data) {
-    $("#dataTable tbody").append("<tr>");
-    for(var col in data[row]) {
-      console.log("looking at: " + colList[c]);
-      console.log("col: " + col);
-      if(col == colList[c]) {
-        $("#dataTable tbody").append("<td>" + data[row][col] + "</td>");
-        countOfColsAdded += 1;
-        c += 1;
-        console.log("just added: " + data[row][col]);
-      }
-      else if(col == "Ride") {
-        $("#dataTable tbody").append("<td>" + data[row][col] + "</td>");
-        countOfColsAdded += 1;
-        console.log("just added: " + data[row][col]);
-      }
-      else {
-        $("#dataTable tbody").append("<td>" + "NA" + "</td>");
-        countOfColsAdded += 1;
-        console.log("just added NA");
-      }
-
-      //console.log("checking for: " + colList[c] + " and cols added: " + countOfColsAdded + " and col val looked at: " + col);
-    }
-    //console.log("num of columns: " + numOfColumns + " & number added: " + countOfColsAdded);
-    for(var j = 0; j < (numOfColumns - countOfColsAdded); j++) {
-      $("#dataTable tbody").append("<td>" + "NA" + "</td>");
-      console.log("adding filler NA");
-    }
-    c = 0;
-    countOfColsAdded = 0;
-    $("#dataTable tbody").append("</tr>");
-  }*/
-
+  //var c = 0;
+  //var countOfColsAdded = 0;
 
   for(var row in data) {
     $("#dataTable tbody").append("<tr>");
