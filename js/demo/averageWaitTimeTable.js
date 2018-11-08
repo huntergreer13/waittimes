@@ -86,9 +86,24 @@ function populateAverageWaitTimeTable(data) {
 
   var hourObj = {};
   var lowestWaitTimesObj = {};
+  var highestWaitTimesObj = {};
   for(var rideName in data) {
     data[rideName].sort(GetSortOrder("AvgWaitTime")); //doing this to get the lowest 5 wait times
-    lowestWaitTimesObj[rideName] = data[rideName].slice(0,5);
+
+    if(data[rideName].length >= 10) {
+      lowestWaitTimesObj[rideName] = data[rideName].slice(0,5);
+      highestWaitTimesObj[rideName] = data[rideName].slice(-3);
+    }
+    else if(data[rideName].length >= 8) {
+      lowestWaitTimesObj[rideName] = data[rideName].slice(0,3);
+      highestWaitTimesObj[rideName] = data[rideName].slice(-2);
+    }
+    else if(data[rideName].length >= 5) {
+      lowestWaitTimesObj[rideName] = data[rideName].slice(0,2);
+      highestWaitTimesObj[rideName] = data[rideName].slice(-1);
+    }
+
+
     data[rideName].sort(GetSortOrder("Hour")); //sort list of avg times by hour
 
     //get list of hours to display as column values
@@ -147,16 +162,25 @@ function populateAverageWaitTimeTable(data) {
       }
       else {
         //write the hour's average wait time and increment waitTimeHourIndex
-        var isGreen = false;
+        var isColored = false;
         //color cell green if it's one of the lowest wait times
         for(j in lowestWaitTimesObj[rideName]) {
           if(lowestWaitTimesObj[rideName][j]["Hour"] == hourList[i]) {
             $("#averageWaitTimeDataTable tbody").append("<td bgcolor=\"#b0fcb0\">" + data[rideName][waitTimeHourIndex]["AvgWaitTime"] + "</td>");
-            isGreen = true;
+            isColored = true;
+          }
+        }
+        if(!isColored) { //if it's not green, check for if it needs to be red
+          //color cell red if it's one of the highest wait times
+          for(j in highestWaitTimesObj[rideName]) {
+            if(highestWaitTimesObj[rideName][j]["Hour"] == hourList[i]) {
+              $("#averageWaitTimeDataTable tbody").append("<td bgcolor=\"#f92f4d\">" + data[rideName][waitTimeHourIndex]["AvgWaitTime"] + "</td>");
+              isColored = true;
+            }
           }
         }
 
-        if(!isGreen) {
+        if(!isColored) {
           $("#averageWaitTimeDataTable tbody").append("<td>" + data[rideName][waitTimeHourIndex]["AvgWaitTime"] + "</td>");
         }
 
