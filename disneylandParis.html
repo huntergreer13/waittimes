@@ -125,7 +125,45 @@
             <div class="card-footer small text-muted">Look at those wait times!</div>
           </div>
 
-          <!-- DataTables Example -->
+          <!-- Average Wait Times Table -->
+          <div class="card mb-3">
+            <div class="card-header" id="averagewaittimestableLabel">
+              <i class="fas fa-table"></i>
+              <p></p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                  <div class="col-2">
+                    <select id="averageWaitTimeTableDropdown">
+                      <option value="A" park="DisneylandParisMagicKingdom" name="Magic Kingdom">Magic Kingdom</option>
+                      <option value="B" park="DisneylandParisWaltDisneyStudios" name="Walt Disney Studios">Walt Disney Studios</option>
+                    </select>
+                  </div>
+                  <div class="col-4">
+                    <div id="reportrange-averageWaitTime" class="pull-right"
+                      style="background: #fff; cursor: pointer; padding: 5px 5px; border: 1px solid #ccc; width: auto; margin-top: 0px; margin-bottom: 10px; margin-left: 20px;">
+                      <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
+                      <span class="datedispsize"></span> <b class="caret"></b>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                  </div>
+                </div>
+              <div class="table-responsive">
+                <table class="table table-bordered" id="averageWaitTimeDataTable" width="100%" cellspacing="0"> <!--id was dataTable-->
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer small text-muted">Look at those average wait times!</div>
+          </div>
+
+          <!-- Historical Wait Times Table -->
           <div class="card mb-3">
             <div class="card-header" id="tableLabel">
               <i class="fas fa-table"></i>
@@ -221,9 +259,10 @@
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin.min.js"></script>
 
-    <!-- Demo scripts for this page-->
+    <!-- Graph/Table scripts for this page-->
     <script src="js/demo/waitTimeTable.js"></script>
     <script src="js/demo/populateChart.js"></script>
+    <script src="js/demo/averageWaitTimeTable.js"></script>
     <!--script src="js/demo/currentWaitTimeTable.js"></script-->
 
     <!--Daterangepicker-->
