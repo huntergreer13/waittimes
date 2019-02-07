@@ -1,48 +1,84 @@
-// Set new default font family and font color to mimic Bootstrap's default styling
+getHistoricalWaitTimes// Set new default font family and font color to mimic Bootstrap's default styling
 Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 Chart.defaults.global.defaultFontColor = '#292b2c';
 
 $(document).ready(function() {
-  refreshChart($('#chartDropdown').find('option:selected').attr('park'), $('#chartFilterDate').val());
+  var start = moment();
+  var end = moment();
+  var max = moment();
+  function cb(start, end) {
+    $('#reportrange-chart span').html(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+    startDate = start.format('YYYY-MM-DD');
+    endDate = end.format('YYYY-MM-DD');
+  }
+  $('#reportrange-chart').daterangepicker({
+    startDate: start,
+    endDate: end,
+    maxDate: max,
+    dateLimit: {
+      years:1
+    },
+    ranges: {
+      'Today': [moment(), moment()],
+      'Yesterday': [moment().subtract(1,'days'), moment().subtract(1,'days')],
+      'This Week': [moment().startOf('week'), moment()],
+      'Last Week': [moment().weekday(-7), moment().weekday(-1)],
+      'This Month': [moment().startOf('month'), moment().endOf('month')],
+      'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')]
+    }
+  }, cb);
+
+  $('#reportrange-chart').on('apply.daterangepicker', function(ev, picker) {
+    startDate = picker.startDate.format('YYYY-MM-DD');
+    endDate = picker.endDate.format('YYYY-MM-DD');
+    chartFilterSubmitted();
+  });
+
+  //set start and end date
+  startDate = moment().format('YYYY-MM-DD');
+  endDate = startDate;
+  $('#reportrange-chart').data('daterangepicker').setStartDate(moment(startDate));
+  $('#reportrange-chart').data('daterangepicker').setEndDate(moment(endDate));
+  $('#reportrange-chart span').html(moment(startDate).format('MMM D, YYYY') + ' - ' + moment(endDate).format('MMM D, YYYY'));
+
+
+  chartFilterSubmitted();
 });
 
 
 function chartFilterSubmitted() {
   var parkInput = $('#chartDropdown').find('option:selected').attr('park');
-  var filterDate = $('#chartFilterDate').val();
-  refreshChart(parkInput, filterDate);
+  refreshChart(parkInput, startDate, endDate);
 }
 
+$('#chartDropdown').change(function() {
+  chartFilterSubmitted();
+});
+
 var myLineChart;
-function refreshChart(park, dateStartsWith) {
+function refreshChart(park, startDate, endDate) {
   $("#chartLabel p").empty();
   $("#chartLabel p").append($('#chartDropdown').find('option:selected').attr('name'));
 
   var ctx = document.getElementById("myAreaChart").getContext('2d');
-  callWaitTimesAPI(dateStartsWith, park).then(function (data) {
+  getHistoricalWaitTimes(park, startDate, endDate).then(function (data) {
       if (data["Body"] == "") {
-        console.log("Error getting wait time data.");
+        alert("Error getting wait time data or no data available for selected timeframe.");
       }
-      var data = data["Body"];
-      data.sort(GetSortOrder("Hour")); //added this to order by hour
-      var graphData = generateGraphData(data);
+      else {
+        var data = data["Body"];
+        data.sort(GetSortOrder("Hour")); //added this to order by hour
+        var graphData = generateGraphData(data);
 
-      if(myLineChart != null) { //if chart already existed, clear it
-        //console.log("chart exists: " + myLineChart.toString());
+        if(myLineChart != null) { //if chart already existed, clear it
+          //console.log("chart exists: " + myLineChart.toString());
+        }
+        myLineChart = new Chart(ctx, graphData);
+        //console.log(myLineChart);
+        myLineChart.update();
       }
-      myLineChart = new Chart(ctx, graphData);
-      //console.log(myLineChart);
-      myLineChart.update();
+
   });
-}
-
-
-function callWaitTimesAPI(dateStartsWith, park) {
-  return $.ajax({
-   url: 'https://oktnhdxq8f.execute-api.us-east-2.amazonaws.com/dev/wait-times?dateStartsWith=\"' + dateStartsWith + '\"' + '&park=\"' + park + '\"',
-       dataType: 'json',
-       async: true
-   });
 }
 
 
